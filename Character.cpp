@@ -50,18 +50,3 @@ void Character::tick(float deltaTime)
     Rectangle dest{screenPos.x, screenPos.y, scale * width, scale * height};
     DrawTexturePro(texture, source, dest, Vector2{}, 0.f, WHITE);
 }
-
-void Character::undoMovement()
-{
-    worldPos = worldPosLastFrame;
-}
-
-Rectangle Character::getCollisionRec()
-{   
-    return Rectangle{
-        screenPos.x,
-        screenPos.y,
-        width * scale,
-        height * scale
-    };
-}
