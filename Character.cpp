@@ -14,39 +14,59 @@ Character::Character(int windowWidth, int windowheight)
 
 void Character::tick(float deltaTime)
 {
-    worldPosLastFrame = worldPos;
+    if (!getAlive()) return;
 
-    Vector2 direction{};
+    BaseCharacter::tick(deltaTime);
+
     if (IsKeyDown(KEY_A))
-        direction.x -= 1.0;
+        velocity.x -= 1.0;
     if (IsKeyDown(KEY_D))
-        direction.x += 1.0;
+        velocity.x += 1.0;
     if (IsKeyDown(KEY_W))
-        direction.y -= 1.0;
+        velocity.y -= 1.0;
     if (IsKeyDown(KEY_S))
-        direction.y += 1.0;
-    if (Vector2Length(direction) != 0.0)
+        velocity.y += 1.0;
+    BaseCharacter::tick(deltaTime);
+
+    Vector2 origin{};
+    Vector2 offset{};
+    float rotation{};
+    if (rightLeft > 0.f)
     {
-        // set worldPos = worldPos + direction
-        worldPos = Vector2Add(worldPos, Vector2Scale(Vector2Normalize(direction), speed));
-        direction.x < 0.f ? rightLeft = -1.f : rightLeft = 1.f;
-        texture = run;
+        origin = {0.f, weapon.height * scale};
+        offset = {35.f, 55.f};
+        weaponCollisionRec = {
+            getScreenPos().x + offset.x,
+            getScreenPos().y + offset.y - weapon.height * scale,
+            weapon.width * scale,
+            weapon.height * scale
+        };
+        IsMouseButtonDown(MOUSE_LEFT_BUTTON) ? rotation = 35.f : rotation = 0.f;
     }
     else
-        texture = idle;
-
-    // update animation frame
-    runningTime += deltaTime;
-    if (runningTime >= updateTime)
     {
-        frame++;
-        runningTime = 0.f;
-        if (frame > maxFrames)
-            frame = 0;
+        origin = {weapon.width * scale, weapon.height * scale};
+        offset = {25.f, 55.f};
+        weaponCollisionRec = {
+            getScreenPos().x + offset.x - weapon.width * scale,
+            getScreenPos().y + offset.y - weapon.height * scale,
+            weapon.width * scale,
+            weapon.height * scale
+        };
+         IsMouseButtonDown(MOUSE_LEFT_BUTTON) ? rotation = -35.f : rotation = 0.f;
     }
 
-    // draw the character
-    Rectangle source{frame * width, 0.f, rightLeft * width, height};
-    Rectangle dest{screenPos.x, screenPos.y, scale * width, scale * height};
-    DrawTexturePro(texture, source, dest, Vector2{}, 0.f, WHITE);
+    //draw the sword
+    Rectangle source{0.f, 0.f, static_cast<float>(weapon.width) * rightLeft, static_cast<float>(weapon.height)};
+    Rectangle dest{getScreenPos().x + offset.x, getScreenPos().y + offset.y, weapon.width * scale, weapon.height * scale};
+    DrawTexturePro(weapon, source, dest, origin, rotation, WHITE);
+}
+
+void Character::takeDamage(float damage)
+{
+    health -= damage;
+    if (health <= 0.f)
+    {
+        setAlive(false);
+    }
 }

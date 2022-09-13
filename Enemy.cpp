@@ -1,30 +1,33 @@
 #include "Enemy.h"
+#include "raymath.h"
 
 Enemy::Enemy(Vector2 pos, Texture2D idle_texture, Texture2D run_texture)
 {
     worldPos = pos;
     texture = idle_texture;
     idle = idle_texture;
+    run = run_texture;
     width = texture.width / maxFrames;
     height = texture.height;
+    speed = 3.5f;
 }
 
 void Enemy::tick(float deltaTime)
 {
-    worldPosLastFrame = worldPos;
+    if (!getAlive()) return;
+    // get toTarget
+    velocity = Vector2Subtract(target->getScreenPos(), getScreenPos());
+    if (Vector2Length(velocity) < radius) velocity = {};
+    BaseCharacter::tick(deltaTime);
 
-    // update animation frame
-    runningTime += deltaTime;
-    if (runningTime >= updateTime)
+    if (CheckCollisionRecs(target->getCollisionRec(), getCollisionRec()))
     {
-        frame++;
-        runningTime = 0.f;
-        if (frame > maxFrames)
-            frame = 0;
+        target->takeDamage(damagePerSec * deltaTime);
     }
 
-    // draw the character
-    Rectangle source{frame * width, 0.f, rightLeft * width, height};
-    Rectangle dest{screenPos.x, screenPos.y, scale * width, scale * height};
-    DrawTexturePro(texture, source, dest, Vector2{}, 0.f, WHITE);
+}
+
+Vector2 Enemy::getScreenPos()
+{
+    return Vector2Subtract(worldPos, target->getWorldPos());
 }
